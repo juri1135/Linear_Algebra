@@ -1,0 +1,179 @@
+#include <iostream>
+#include <time.h>
+#include <cmath>
+#include <vector>
+using namespace std;
+vector<double> v; //sample vector's column vector
+vector<vector<double>> vs; //sample vector의 열벡터를 모아둔 vector
+vector<double> e;//unit vector
+vector<vector<double>> es;//unit vectors 모아둔 vector
+vector<double> y;// random vector for proof
+vector<double> u;//result vector
+vector<vector<double>> us;//vectors of result vectors
+vector<double> x;
+double matrix[7][7];
+int n;
+int ab=1;
+//행렬 동적 할당
+double **allocateMatrix(int row, int col)
+{
+    double **matrix = new double*[row];
+    for(int i = 0; i < row; ++i) {
+        matrix[i] = new double[col]{0};
+    }
+    return matrix;
+}
+//할당 해제
+double deallocateMatrix(double **matrix, int row)
+{
+    for(int i = 0; i < row; ++i) {
+        delete matrix[i];
+    }
+    delete [] matrix;
+    return 0;
+}
+//col vector 분리
+vector<double> colvec(double **m, int n, int num){
+    vector<double> vec;
+    for(int k=0; k<n; k++){
+        vec.push_back(m[num][k]);
+    }
+    return vec;
+}
+//증명용 랜덤 벡터 생성
+void randvec(){
+    y.clear();
+    cout<<"<TEST "<<ab<<" >"<<endl<<"random generated vectors"<<endl;
+    for(int i=0; i<n; i++){
+        double d=(rand()%10+1);
+        y.push_back(d);
+        cout<<y[i]<<endl;
+    }
+    cout<<endl;
+    ab++;
+}
+//n차원 벡터 랜덤으로 생성성
+void initilizeMatrix(double **m)
+{   
+    for(int i = 0; i <n; ++i) {
+        for(int j = 0; j <n; ++j) {
+            double d=rand()%10+1;
+            m[i][j]=d;
+            matrix[i][j]=d;
+        }
+    }
+}
+//행렬 출력하는 함수수
+void printMatrix( double **m, int row, int col)
+{
+    for(auto i = 0; i < row; ++i) {
+        for(auto j = 0; j < col; ++j) {
+            printf("%10f ",m[i][j]);
+        }
+        cout << endl;
+    }
+    cout<<endl;
+}
+//gram-schmidt 출력
+void printgram(){
+    cout<<"<Gram-schmidt>"<<endl;
+    for(int i=0; i<n; i++){
+        for(int k=0; k<n; k++){
+            printf("%10f ",es[k][i]);
+        }
+        cout<<endl;
+    }
+    cout<<endl;
+}
+
+//vector 내적
+double mul(vector<double> a, vector<double> b){
+    double d=0;
+    for(int i=0; i<n; i++){
+        d+=a[i]*b[i];
+    }
+    return d;
+}
+//gauss elimination
+bool Gausselimination(double matrix[7][7]){
+    double sto; //행 사이의 비
+    for(int i=0; i<n-1; i++){
+        if(matrix[i][i]==0) return 0;//pivot이 0이 되면 그냥 
+        for(int j=i+1; j<n; j++){
+            sto=matrix[j][i]/matrix[i][i];
+            for(int k=0; k<n; k++){
+                matrix[j][k]=matrix[j][k]-sto*matrix[i][k];
+            }
+        }
+    }
+    //pivot 갯수 확인하기
+    int pivot=1;
+    for(int i=1; i<n; i++){
+        if(matrix[i][i]!=0){
+            pivot++;
+        }
+    }
+    if(pivot==n) return 1;
+    else return 0;
+}
+
+//vector sub
+vector<double> mi(vector<double> a, vector<double> b){
+    vector<double> res;
+    for(int i=0; i<n; i++){
+        res.push_back(a[i]-b[i]);
+    }
+    return res;
+}
+//vector addition
+vector<double> pl(vector<double> a, vector<double> b){
+    vector<double> res;
+    res.clear();
+    for(int i=0; i<n; i++){
+        res.push_back(a[i]+b[i]);
+    }
+    return res;
+}
+//크기 계산
+double norm(vector<double> v){
+    double d=0;
+    for(int i=0; i<n; i++){
+        d+=v[i]*v[i];
+    }
+    return sqrt(d);
+}
+//projection
+vector<double> makeP(vector<double> v, vector<double> e){
+    vector<double> res;
+    res.clear();
+    for(int i=0; i<n; i++){
+        res.push_back((mul(v,e))*e[i]);
+    }
+    return res;
+}
+vector<double> sigma(int i){//i는 ui+1
+    vector<double> store;
+    for(int i=0; i<n; i++){
+        store.push_back(0);
+    }
+    for(int k=0; k<i; k++){
+        store=pl(store,makeP(vs[i],es[k]));
+    }
+    return store;
+}
+//e벡터 만들기
+void makeE(vector<double>a){//갯수, 벡터, 크기 받기
+    e.clear();
+    for(int i=0; i<n; i++){
+        e.push_back(a[i]/norm(a));
+    }
+    es.push_back(e);
+}
+//u벡터 만들기
+void makeU(int i){
+    vector<double> d;
+    d=mi(vs[i],sigma(i));
+    us.push_back(d);
+}
+
+
